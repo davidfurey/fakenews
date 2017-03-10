@@ -132,6 +132,9 @@ function movePlayer() {
     if ((player.x > (1000 - player.width) && player.vx > 0) || (player.x < 0 && player.vx < 0)) {
         player.vx = -player.vx;
     }
+    if ((player.y > (600 - player.height) && player.vy > 0) || (player.y < 0 && player.vy < 0)) {
+        player.vy = -player.vy;
+    }
 
 	moveObject(player, PLAYER_FRICTION);
 }
@@ -186,7 +189,7 @@ function moveBullets() {
 }
 
 function generateNews() {
-	if (Math.random() < 0.03) {
+	if (Math.random() < 0.026) {
 		let randomNews = Math.round(getRandom(0, newsTemplates.length - 1));
 		let theNews = newsTemplates[randomNews];
 		let newsElement = generateObject(theNews);
