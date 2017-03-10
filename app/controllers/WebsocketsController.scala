@@ -37,11 +37,11 @@ class GameMasterActor extends Actor {
   }
 }
 
-object MyWebSocketActor {
-  def props(out: ActorRef, parent: ActorRef) = Props(new MyWebSocketActor(out, parent))
+object PlayerActor {
+  def props(out: ActorRef, parent: ActorRef) = Props(new PlayerActor(out, parent))
 }
 
-class MyWebSocketActor(out: ActorRef, parent: ActorRef) extends Actor {
+class PlayerActor(out: ActorRef, parent: ActorRef) extends Actor {
 
   parent ! RegisterSocket(out)
 
@@ -57,21 +57,17 @@ class MyWebSocketActor(out: ActorRef, parent: ActorRef) extends Actor {
 
 class WebsocketsController @Inject() (implicit system: ActorSystem, materializer: Materializer) extends Controller {
 
-  val gameMaster = system.actorOf(
-    Props(classOf[GameMasterActor]),
-    "game-master"
-  )
-
   import play.api.mvc.WebSocket.MessageFlowTransformer
 
   implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
 
-  def socket2 = WebSocket.accept[String, String] { request =>
-    ActorFlow.actorRef(out => MyWebSocketActor.props(out, gameMaster))
-  }
-
+  val gameMaster = system.actorOf(
+    Props(classOf[GameMasterActor]),
+    "game-master"
+  )
+  
   def socket = WebSocket.accept[InEvent, OutEvent] { request =>
-    ActorFlow.actorRef(out => MyWebSocketActor.props(out, gameMaster))
+    ActorFlow.actorRef(out => PlayerActor.props(out, gameMaster))
   }
 
   def sendGlobalMessage = Action(BodyJson[GlobalSend]) { implicit request =>
