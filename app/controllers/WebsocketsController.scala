@@ -46,7 +46,7 @@ class GameMasterActor extends Actor {
     case (id: UUID, GoodNewsHitPublic) =>
       Database.updateScore(id, 10)
     case (id: UUID, PlayerName(name)) =>
-      Database.setName(id, name)
+      Database.setName(id, name.replace("<", "").replace(">", ""))
     case "tick" =>
       sendToAll(OutEvent.leaderBoardEvent(Database.scores))
   }
