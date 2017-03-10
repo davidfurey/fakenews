@@ -23,7 +23,12 @@ object PresentationState {
   implicit val jf = Json.format[PresentationState]
 }
 
-case class OutEvent(`type`: String, presentationState: Option[PresentationState] = None, test: Option[String] = None, leaderBoard: Option[List[PlayerScore]] = None)
+case class PlayerScore(name: String, score: Int)
+object PlayerScore {
+  implicit val jf = Json.format[PlayerScore]
+}
+
+case class OutEvent(`type`: String, score: Option[Int] = None, presentationState: Option[PresentationState] = None, test: Option[String] = None, leaderBoard: Option[List[PlayerScore]] = None)
 object OutEvent {
   implicit val jf = Json.format[OutEvent]
 
@@ -32,12 +37,9 @@ object OutEvent {
 
   def leaderBoardEvent(leaderBoard: List[PlayerScore]) =
     OutEvent("update-leader-board", leaderBoard = Some(leaderBoard))
-}
 
-
-case class PlayerScore(name: String, score: Int)
-object PlayerScore {
-  implicit val jf = Json.format[PlayerScore]
+  def myScoreEvent(score: Int) =
+    OutEvent("my-score", score = Some(score))
 }
 
 sealed trait InEvent

@@ -35,18 +35,6 @@ class GameMasterActor extends Actor {
     case state: PresentationState =>
       currentState = state
       sendToAll(OutEvent.updateStateEvent(currentState))
-    case (id: UUID, HitFakeNews) =>
-      Database.updateScore(id, 10)
-    case (id: UUID, HitGoodNews) =>
-      Database.updateScore(id, -10)
-    case (id: UUID, Fired) =>
-      Database.updateScore(id, -1)
-    case (id: UUID, FakeNewsHitPublic) =>
-      Database.updateScore(id, -100)
-    case (id: UUID, GoodNewsHitPublic) =>
-      Database.updateScore(id, 10)
-    case (id: UUID, PlayerName(name)) =>
-      Database.setName(id, name.replace("<", "").replace(">", ""))
     case "tick" =>
       sendToAll(OutEvent.leaderBoardEvent(Database.scores))
   }
@@ -58,23 +46,25 @@ object PlayerActor {
 
 class PlayerActor(out: ActorRef, parent: ActorRef) extends Actor {
 
+  implicit val ec = context.dispatcher
+  
   val id = UUID.randomUUID()
 
   parent ! RegisterSocket(out)
 
   def receive = {
     case HitFakeNews =>
-      parent ! (id -> HitFakeNews)
+      Database.updateScore(id, 10).map { score => out ! OutEvent.myScoreEvent(score) }
     case HitGoodNews =>
-      parent ! (id -> HitGoodNews)
+      Database.updateScore(id, -10).map { score => out ! OutEvent.myScoreEvent(score) }
     case Fired =>
-      parent ! (id -> Fired)
+      Database.updateScore(id, -1).map { score => out ! OutEvent.myScoreEvent(score) }
     case GoodNewsHitPublic =>
-      parent ! (id -> GoodNewsHitPublic)
+      Database.updateScore(id, 10).map { score => out ! OutEvent.myScoreEvent(score) }
     case FakeNewsHitPublic =>
-      parent ! (id -> FakeNewsHitPublic)
-    case name: PlayerName =>
-      parent ! (id -> name)
+      Database.updateScore(id, -100).map { score => out ! OutEvent.myScoreEvent(score) }
+    case PlayerName(name) =>
+      Database.setName(id, name.replace("<", "").replace(">", ""))
   }
 
   override def postStop() = {
