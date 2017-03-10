@@ -135,7 +135,7 @@ function shoot() {
 			alive: true
 		});
 		player.shooting.lastShot = frame;
-		if (score > 0) score--;
+		if (score > 0) score = Math.max(score - 1, 0);
 	}
 }
 
@@ -182,9 +182,9 @@ function moveNews() {
 		if (news[0].alive) {
 			scene.removeChild(news[0].element);
 			if (news[0].fake) {
-				score -= 100;
+                score = Math.max(score - 100, 0);
 			} else {
-				score += 10;
+                score = Math.max(score + 10, 0);
 			}
 		}
 		news.shift();
@@ -202,9 +202,9 @@ function collisions() {
 					scene.removeChild(b.element);
 				}
 				if (n.fake) {
-					score += 10;
+					score = Math.max(score + 10, 0);
 				} else {
-					score -= 10;
+                    score = Math.max(score - 10, 0);
 				}
 			}
 		});
@@ -285,4 +285,4 @@ socket.onmessage = function(msg) {
 			console.log(presentationState);
 			break;
 	}
-}
+};
