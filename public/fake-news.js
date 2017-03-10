@@ -21,6 +21,8 @@ let player = {
 	y: 200,
 	vx: 0,
 	vy: 0,
+    width: 36,
+    height: 36,
 	element: document.getElementById('player'),
 	inserted: true,
 	shooting: {
@@ -76,6 +78,23 @@ function getRandom(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+var socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/websocket');
+
+function send(obj) {
+    socket.send(JSON.stringify(obj));
+}
+
+socket.onmessage = function(msg) {
+    let serverData = JSON.parse(msg.data);
+    console.log(serverData);
+    switch (serverData.type) {
+        case "update-state":
+            presentationState = serverData.presentationState;
+            console.log(presentationState);
+            break;
+    }
+};
+
 function moveObject(obj, friction = 1) {
 	obj.x += obj.vx;
 	obj.y += obj.vy;
@@ -96,6 +115,10 @@ function movePlayer() {
 	if (keyboardState.bottom) {
 		player.vy += PLAYER_ACCELERATION;
 	}
+    // bounce
+    if ((player.x > (1000 - player.width) && player.vx > 0) || (player.x < 0 && player.vx < 0)) {
+        player.vx = -player.vx;
+    }
 
 	moveObject(player, PLAYER_FRICTION);
 }
@@ -172,10 +195,10 @@ function moveNews() {
 	news.forEach((n) => {
 		n.vx += Math.random()-0.5;
 		n.vy += Math.random()-0.35;
-		// bounce
-		if ((n.x > (1000 - n.width) && n.vx > 0) || (n.x < 0 && n.vx < 0)) {
-			n.vx = -n.vx;
-		}
+        // bounce
+        if ((n.x > (1000 - n.width) && n.vx > 0) || (n.x < 0 && n.vx < 0)) {
+            n.vx = -n.vx;
+        }
 		moveObject(n, 0.95);
 	});
 	if (news[0] && news[0].y > 550) {
@@ -274,15 +297,15 @@ function pause() {
 	window.clearInterval(i);
 }
 
-var socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/websocket');
-
-socket.onmessage = function(msg) {
-	let serverData = JSON.parse(msg.data);
-	console.log(serverData);
-	switch (serverData.type) {
-		case "update-state":
-			presentationState = serverData.presentationState;
-			console.log(presentationState);
-			break;
-	}
+let nameInput = document.getElementById('name');
+nameInput.focus();
+nameInput.onkeydown = function(ev) {
+    if (ev.keyCode === 13) {
+        nameInput.blur();
+        scene.focus();
+        send({
+            type: '',
+            name: nameInput.value
+        })
+    }
 };
