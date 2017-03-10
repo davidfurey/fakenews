@@ -1,5 +1,6 @@
 package controllers
 
+import java.util.UUID
 import javax.inject.Inject
 
 import play.api.mvc._
@@ -34,6 +35,20 @@ class GameMasterActor extends Actor {
     case state: PresentationState =>
       currentState = state
       sendToAll(OutEvent.updateStateEvent(currentState))
+    case (id: UUID, HitFakeNews) =>
+      Database.updateScore(id, 10)
+    case (id: UUID, HitGoodNews) =>
+      Database.updateScore(id, -10)
+    case (id: UUID, Fired) =>
+      Database.updateScore(id, -1)
+    case (id: UUID, FakeNewsHitPublic) =>
+      Database.updateScore(id, -100)
+    case (id: UUID, GoodNewsHitPublic) =>
+      Database.updateScore(id, 10)
+    case (id: UUID, PlayerName(name)) =>
+      Database.setName(id, name)
+    case "tick" =>
+      sendToAll(OutEvent.leaderBoardEvent(Database.scores))
   }
 }
 
@@ -43,11 +58,23 @@ object PlayerActor {
 
 class PlayerActor(out: ActorRef, parent: ActorRef) extends Actor {
 
+  val id = UUID.randomUUID()
+
   parent ! RegisterSocket(out)
 
   def receive = {
-    case InEvent(s) =>
-      out ! OutEvent("I received your message: " + s)
+    case HitFakeNews =>
+      parent ! (id -> HitFakeNews)
+    case HitGoodNews =>
+      parent ! (id -> HitGoodNews)
+    case Fired =>
+      parent ! (id -> Fired)
+    case GoodNewsHitPublic =>
+      parent ! (id -> GoodNewsHitPublic)
+    case FakeNewsHitPublic =>
+      parent ! (id -> FakeNewsHitPublic)
+    case name: PlayerName =>
+      parent ! (id -> name)
   }
 
   override def postStop() = {
@@ -61,11 +88,15 @@ class WebsocketsController @Inject() (implicit system: ActorSystem, materializer
 
   implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
 
+  implicit val ec = system.dispatcher
+
   val gameMaster = system.actorOf(
     Props(classOf[GameMasterActor]),
     "game-master"
   )
-  
+
+  import scala.concurrent.duration._
+  system.scheduler.schedule(10.seconds, 10.seconds, gameMaster, "tick")
   def socket = WebSocket.accept[InEvent, OutEvent] { request =>
     ActorFlow.actorRef(out => PlayerActor.props(out, gameMaster))
   }
