@@ -64,18 +64,6 @@ let newsTemplates = [
 		fake: true
 	},
 	{
-		width: 100,
-		height: 115,
-		background: 'url("may.png")',
-		fake: true
-	},
-	{
-		width: 58,
-		height: 32,
-		background: 'url("brexit.png")',
-		fake: false
-	},
-	{
 		width: 105,
 		height: 151,
 		background: 'url("kiitg.png")',
@@ -89,8 +77,6 @@ let newsTemplates = [
 	}
 ];
 
-let score = 0;
-
 function getRandom(min, max) {
   return Math.random() * (max - min) + min;
 }
@@ -103,6 +89,7 @@ function send(obj) {
 }
 
 let leaderboard = document.getElementById('leaderboard');
+let scoreElement = document.getElementById('score');
 
 socket.onmessage = function(msg) {
     let serverData = JSON.parse(msg.data);
@@ -114,6 +101,9 @@ socket.onmessage = function(msg) {
             break;
         case "update-leader-board" :
             leaderboard.innerHTML = serverData.leaderBoard.map((s) => s.name + ': ' + s.score).join('<br />');
+            break;
+        case "my-score" :
+            scoreElement.textContent = serverData.score;
             break;
     }
 };
@@ -181,10 +171,7 @@ function shoot() {
 			alive: true
 		});
 		player.shooting.lastShot = frame;
-		if (score > 0) {
-		    score = Math.max(score - 1, 0);
-		    send({type: 'fired'});
-        }
+		send({type: 'fired'});
 	}
 }
 
@@ -232,10 +219,8 @@ function moveNews() {
 			scene.removeChild(news[0].element);
 			if (news[0].fake) {
 			    send({type: 'fake-news-hit-public'});
-                score = Math.max(score - 100, 0);
 			} else {
                 send({type: 'good-news-hit-public'});
-                score = Math.max(score + 10, 0);
 			}
 		}
 		news.shift();
@@ -253,11 +238,9 @@ function collisions() {
 					scene.removeChild(b.element);
 				}
 				if (n.fake) {
-					score = Math.max(score + 10, 0);
-                    score({type: 'hit-fake-news'});
+                    send({type: 'hit-fake-news'});
 				} else {
-                    score = Math.max(score - 10, 0);
-                    score({type: 'hit-good-news'});
+                    send({type: 'hit-good-news'});
 				}
 			}
 		});
