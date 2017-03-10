@@ -9,40 +9,7 @@ import akka.stream.Materializer
 import play.api.libs.json.Json
 import play.api.mvc.BodyParsers.parse.{json => BodyJson}
 
-object MyWebSocketActor {
-  def props(out: ActorRef, parent: ActorRef) = Props(new MyWebSocketActor(out, parent))
-}
-
-case class RegisterSocket(out: ActorRef)
-case class UnregisterSocket(out: ActorRef)
-case class GlobalSend(message: String)
-object GlobalSend {
-  implicit val jf = Json.format[GlobalSend]
-}
-
-case class PresentationState(
-  playerVisible: Boolean,
-  canShoot: Boolean,
-  generateNews: Boolean,
-  hasReaders: Boolean
-)
-
-object PresentationState {
-  implicit val jf = Json.format[PresentationState]
-}
-
-case class OutEvent(`type`: String, presentationState: Option[PresentationState] = None, test: Option[String] = None)
-object OutEvent {
-  implicit val jf = Json.format[OutEvent]
-
-  def updateStateEvent(state: PresentationState) =
-    OutEvent("update-state", presentationState = Some(state))
-}
-
-case class InEvent(phase: String)
-object InEvent {
-  implicit val jf = Json.format[InEvent]
-}
+import models._
 
 class GameMasterActor extends Actor {
 
@@ -68,6 +35,10 @@ class GameMasterActor extends Actor {
       currentState = state
       sendToAll(OutEvent.updateStateEvent(currentState))
   }
+}
+
+object MyWebSocketActor {
+  def props(out: ActorRef, parent: ActorRef) = Props(new MyWebSocketActor(out, parent))
 }
 
 class MyWebSocketActor(out: ActorRef, parent: ActorRef) extends Actor {
