@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl -X POST -d@testHit.json http://localhost:9000/update -H "Content-type: application/json"

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl -X POST -d@sendMessage.json http://localhost:9000/global-send -H "Content-type: application/json" -v
