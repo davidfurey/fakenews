@@ -81,8 +81,11 @@ function getRandom(min, max) {
 var socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/websocket');
 
 function send(obj) {
+    console.log(JSON.stringify(obj));
     socket.send(JSON.stringify(obj));
 }
+
+let leaderboard = document.getElementById('leaderboard');
 
 socket.onmessage = function(msg) {
     let serverData = JSON.parse(msg.data);
@@ -91,6 +94,9 @@ socket.onmessage = function(msg) {
         case "update-state":
             presentationState = serverData.presentationState;
             console.log(presentationState);
+            break;
+        case "update-leader-board" :
+            leaderboard.innerHTML = serverData.leaderBoard.map((s) => s.name + ': ' + s.score).join('<br />');
             break;
     }
 };
@@ -158,7 +164,10 @@ function shoot() {
 			alive: true
 		});
 		player.shooting.lastShot = frame;
-		if (score > 0) score = Math.max(score - 1, 0);
+		if (score > 0) {
+		    score = Math.max(score - 1, 0);
+		    send({type: 'fired'});
+        }
 	}
 }
 
@@ -304,7 +313,7 @@ nameInput.onkeydown = function(ev) {
         nameInput.blur();
         scene.focus();
         send({
-            type: '',
+            type: 'player-name',
             name: nameInput.value
         })
     }
