@@ -90,7 +90,6 @@ let newsTemplates = [
 ];
 
 let score = 0;
-let scoreElement = document.getElementById("score");
 
 function getRandom(min, max) {
   return Math.random() * (max - min) + min;
@@ -232,8 +231,10 @@ function moveNews() {
 		if (news[0].alive) {
 			scene.removeChild(news[0].element);
 			if (news[0].fake) {
+			    send({type: 'fake-news-hit-public'});
                 score = Math.max(score - 100, 0);
 			} else {
+                send({type: 'good-news-hit-public'});
                 score = Math.max(score + 10, 0);
 			}
 		}
@@ -253,8 +254,10 @@ function collisions() {
 				}
 				if (n.fake) {
 					score = Math.max(score + 10, 0);
+                    score({type: 'hit-fake-news'});
 				} else {
                     score = Math.max(score - 10, 0);
+                    score({type: 'hit-good-news'});
 				}
 			}
 		});
@@ -274,7 +277,6 @@ function tick() {
 	moveNews();
 	collisions();
 	renderScene();
-	scoreElement.textContent = score;
 }
 
 function handleKeyboardState(setTo) {
@@ -318,7 +320,6 @@ function generateReaders() {
 }
 
 generateReaders();
-let i = window.setInterval(tick, 25);
 
 function pause() {
 	window.clearInterval(i);
@@ -333,6 +334,8 @@ nameInput.onkeydown = function(ev) {
         send({
             type: 'player-name',
             name: nameInput.value
-        })
+        });
+        document.getElementById('nameBox').style.visibility = 'hidden';
+        let i = window.setInterval(tick, 25);
     }
 };

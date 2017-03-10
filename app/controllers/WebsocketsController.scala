@@ -86,7 +86,7 @@ class WebsocketsController @Inject() (implicit system: ActorSystem, materializer
   )
 
   import scala.concurrent.duration._
-  system.scheduler.schedule(10.seconds, 10.seconds, gameMaster, "tick")
+  system.scheduler.schedule(1.seconds, 1.seconds, gameMaster, "tick")
   def socket = WebSocket.accept[InEvent, OutEvent] { request =>
     ActorFlow.actorRef(out => PlayerActor.props(out, gameMaster))
   }
