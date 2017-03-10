@@ -40,6 +40,12 @@ let frame = 0;
 
 let newsTemplates = [
 	{
+		width: 125,
+		height: 70,
+		background: 'url("real-news-1.png")',
+		fake: false
+	},
+	{
 		width: 150,
 		height: 171,
 		background: 'url("fake-news-1.png")',
